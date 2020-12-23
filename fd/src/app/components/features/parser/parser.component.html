@@ -1,0 +1,15 @@
+<p>Parser</p>
+
+<form [formGroup]="parseForm" (ngSubmit)="onSubmit()">
+
+    <div class="text-bar">
+        <p><label>Input Functional Dependencies:</label></p>
+        <p> <input type="text" formControlName="input" (keydown.space)="$event.preventDefault()"></p>
+    </div>
+
+    <button class="button-search" type="submit" [disabled] = "!parseForm.valid">Parse</button>
+</form>
+
+<div *ngFor="let fd of fdArray">
+    <p>{{fd}}</p>
+</div>
