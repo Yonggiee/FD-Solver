@@ -40,7 +40,9 @@ export class FDCalculatorService {
         combi.push(temp);
       }
     }
-    this.attributeClosure = combi;
+    this.attributeClosure = combi.sort(function(a, b) {
+      return a.length - b.length || a.localeCompare(b)
+    });
   }
 
   parse(attributes:string, fdInput: string) {
