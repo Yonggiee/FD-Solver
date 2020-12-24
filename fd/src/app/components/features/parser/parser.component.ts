@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { FDCalculatorService } from 'src/app/services/fdcalculator.service';
 
 @Component({
@@ -9,9 +9,15 @@ import { FDCalculatorService } from 'src/app/services/fdcalculator.service';
 })
 export class ParserComponent implements OnInit {
   fdArray: any;
+  errMsg: string = "";
 
   parseForm = new FormGroup({
-    input: new FormControl(''),
+    fdInput: new FormControl('', Validators.required),
+    attributes: new FormControl('', 
+      [
+        Validators.required,
+        Validators.pattern('^[a-zA-Z]+$')
+      ])
   });
   
   constructor(public fdCalculator: FDCalculatorService) { }
@@ -21,10 +27,14 @@ export class ParserComponent implements OnInit {
 
   onSubmit() {
     try {
-      this.fdArray = this.fdCalculator.parse(this.parseForm.get('input').value);
+      let attributes = this.parseForm.get('attributes').value;
+      let input = this.parseForm.get('fdInput').value;
+      this.fdCalculator.haveDuplicateAttributes(attributes);
+      this.fdArray = this.fdCalculator.parse(attributes, input);
+      this.errMsg = '';
     } catch(err) {
       this.fdArray = [];
-      console.log(err.message);
+      this.errMsg = err.message;
     }
   }
 }
