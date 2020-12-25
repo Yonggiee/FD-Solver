@@ -7,16 +7,18 @@ import { stringify } from 'querystring';
 export class FDCalculatorService {
   fdArray: any = [];
   attributeClosure = {};
+  attributes = {};
 
   constructor() { }
 
   haveDuplicateAttributes(input){
-    let map = {}
+    this.attributes = {};
     for (let i = 0; i < input.length; i++) {
-      if (map[input[i]]) {
+      if (this.attributes[input[i]]) {
+        this.attributes = {};
         throw new Error("There are duplicate (" + input[i] + ")");
       } else {
-        map[input[i]] = true;
+        this.attributes[input[i]] = true;
       }
     }
   }
@@ -45,16 +47,31 @@ export class FDCalculatorService {
     });
   }
 
+  checkFDInAttributes(fdInput){
+    for (let i = 0; i < fdInput.length; i++) {
+      let temp = fdInput[i].split('');
+      for (let j = 0; j < temp.length; j++) {
+        if (this.attributes[temp[j]]) {
+          continue;
+        } else {
+          throw new Error("'" + temp[j] + "' don't exist in the attributes");
+        }
+      }
+    }
+  }
+
   parse(attributes:string, fdInput: string) {
     this.getCombis(attributes);
-    console.log(this.attributeClosure);
-    this.fdArray = fdInput.toUpperCase().split(',');
+    this.fdArray = fdInput.split(',');
     
     for (let i = 0; i < this.fdArray.length; i++) {
-      if (!(/^[A-Za-z]+->[A-Za-z]+$/.test(this.fdArray[i]))) {
-        let temp = this.fdArray[i]
+      let temp = this.fdArray[i];
+      if (!(/^[A-Za-z]+->[A-Za-z]+$/.test(temp))) {
         this.fdArray = [];
         throw new Error("'" + temp + "' is not valid!");
+      } else {
+        let furtherSplit = this.fdArray[i].split('->');
+        this.checkFDInAttributes(furtherSplit);
       }
     }
     return this.fdArray;
