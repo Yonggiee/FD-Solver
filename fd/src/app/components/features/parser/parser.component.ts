@@ -29,7 +29,6 @@ export class ParserComponent implements OnInit {
     try {
       let attributes = this.parseForm.get('attributes').value.toUpperCase();
       let input = this.parseForm.get('fdInput').value.toUpperCase();
-      this.fdCalculator.haveDuplicateAttributes(attributes);
       this.fdArray = this.fdCalculator.parse(attributes, input);
       this.errMsg = '';
     } catch(err) {

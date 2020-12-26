@@ -1,4 +1,9 @@
 <p>Attribute Closure</p>
 
+<button (click)="run()">Run</button>
+
+<div *ngFor="let att of attributeClosure | keyvalue">
+    {{att.key}}+: {{att.value}}
+</div>
 
 

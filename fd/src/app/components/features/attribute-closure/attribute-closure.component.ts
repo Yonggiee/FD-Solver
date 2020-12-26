@@ -8,11 +8,16 @@ import { FDCalculatorService } from 'src/app/services/fdcalculator.service';
   styleUrls: ['./attribute-closure.component.css']
 })
 export class AttributeClosureComponent implements OnInit {
+  attributeClosure;
 
-
-  constructor() { }
+  constructor(public fdCalculator: FDCalculatorService) { }
 
   ngOnInit(): void {
   }
   
+  run() {
+    this.fdCalculator.calculateAttributeClosure();
+    this.attributeClosure = this.fdCalculator.attributeClosure;
+  }
+
 }
