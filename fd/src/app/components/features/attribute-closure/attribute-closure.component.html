@@ -2,7 +2,7 @@
 
 <button (click)="run()">Run</button>
 
-<div *ngFor="let att of attributeClosure | keyvalue">
+<div *ngFor="let att of attributeClosure | keyvalue: originalOrder">
     {{att.key}}+: {{att.value}}
 </div>
 

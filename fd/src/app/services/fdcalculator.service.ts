@@ -8,37 +8,48 @@ export class FDCalculatorService {
   attributeClosure = {};
   fdHashmap = {};
   attributes: string;
+  attributesArray = {};
 
   constructor() { }
 
-  // create the hashmap for the attributeClosure
+  reset() {
+    this.fdArray = [];
+    this.attributeClosure = {};
+    this.fdHashmap = {};
+    this.attributes = '';
+    this.attributesArray = {};
+  }
+
   // check if there are any duplicate attributes
   // check if the attributes in FD exists in the attributes specified
+  // parse FDs to remove unnecessary attributes
+  // create the hashmap for the attributes 
   parse(attributes:string, fdInput: string) {
-    this.createAttributesClosureArray(attributes);
-    this.fdArray = fdInput.split(',');
-    
-    for (let i = 0; i < this.fdArray.length; i++) {
-      let temp = this.fdArray[i];
+    this.reset();
+    this.createAttributesArray(attributes);
+    let tempArray = fdInput.split(',');
+    for (let i = 0; i < tempArray.length; i++) {
+      let temp = tempArray[i];
       if (!(/^[A-Za-z]+->[A-Za-z]+$/.test(temp))) {
-        this.fdArray = [];
+        tempArray = [];
         throw new Error("'" + temp + "' is not valid!");
       } else {
-        let furtherSplit = this.fdArray[i].split('->');
+        let furtherSplit = tempArray[i].split('->');
         this.checkFDInAttributes(furtherSplit);
+        this.parseFDInAttributes(this.fdArray, temp);
       }
     }
     this.attributes = attributes;
+    this.createFDHashmap(this.attributes);
     return this.fdArray;
   }
 
-  createAttributesClosureArray(input) {
-    this.attributeClosure = {};
+  createAttributesArray(input) {
     for (let i = 0; i < input.length; i++) {
-      if (input[i] in this.attributeClosure) {
+      if (input[i] in this.attributesArray) {
         throw new Error("There are duplicate '" + input[i] + "'");
       } else {
-        this.attributeClosure[input[i]] = [];
+        this.attributesArray[input[i]] = true;
       }
     }
   }
@@ -47,7 +58,7 @@ export class FDCalculatorService {
     for (let i = 0; i < fdInput.length; i++) {
       let temp = fdInput[i].split('');
       for (let j = 0; j < temp.length; j++) {
-        if (temp[j] in this.attributeClosure) {
+        if (temp[j] in this.attributesArray) {
           continue;
         } else {
           throw new Error("'" + temp[j] + "' don't exist in the attributes");
@@ -56,14 +67,43 @@ export class FDCalculatorService {
     }
   }
 
+  createAttributesClosureArray(hashmap) {
+    let attributeClosureTemp = {};
+    for (let key in hashmap) {
+      let array = hashmap[key];
+      let attributesInKey = key.split('');
+      for (let i = 0; i < array.length; i++) {
+        if (!(attributesInKey.includes(array[i]))) {
+          if (!(key in attributeClosureTemp)) {
+            attributeClosureTemp[key] = [];
+          }
+          attributeClosureTemp[key].push(array[i]);
+        }
+      }
+    }
+    return attributeClosureTemp;
+  }
+
+  parseFDInAttributes(fdArray, fd) {
+    let splitFDAtArrow = fd.split('->');
+    let fromAttributes = Array.from(new Set(splitFDAtArrow[0].split('')));
+    let afterAttributes = Array.from(new Set(splitFDAtArrow[1].split('')));
+    console.log(fromAttributes);
+    console.log(afterAttributes);
+    afterAttributes = afterAttributes.filter( function( ele ) {
+      return fromAttributes.indexOf( ele ) < 0;
+    });
+    let newFD = fromAttributes.join('') + '->' + afterAttributes.join('');
+    fdArray.push(newFD);
+    return fdArray;
+  }
+
   calculateAttributeClosure() {
-    this.createFDHashmap(this.attributes);
     this.populateAttributeClosure();
   }
 
   // create a hashmap which represents the FDs
   createFDHashmap(attributes: string) {
-    this.fdHashmap = {};
     for (let i = 0; i < this.fdArray.length; i++) {
       let temp = this.fdArray[i];
       let furtherSplit = this.fdArray[i].split('->');
@@ -73,6 +113,7 @@ export class FDCalculatorService {
       this.fdHashmap[furtherSplit[0]] = 
         Array.from(new Set(this.fdHashmap[furtherSplit[0]].concat(furtherSplit[1].split('')))); 
     }
+    this.attributeClosure = this.createAttributesClosureArray(this.fdHashmap);
   }
 
   // fill the attributes of the attribute closure
@@ -102,7 +143,6 @@ export class FDCalculatorService {
     for (let key in this.attributeClosure) {
       this.attributeClosure[key] = this.attributeClosure[key].split('').sort().join('');
     }
-    console.log(this.attributeClosure);
   }
 
   // get substring combinations of string
@@ -129,4 +169,6 @@ export class FDCalculatorService {
       return a.length - b.length || a.localeCompare(b)
     });
   }
+
+  // Split 
 }
