@@ -6,12 +6,14 @@ import { AttributeClosureComponent } from './components/features/attribute-closu
 import { AppRoutingModule } from './app-routing.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ParserComponent } from './components/features/parser/parser.component';
+import { MinimalCoverComponent } from './components/features/minimal-cover/minimal-cover.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AttributeClosureComponent,
-    ParserComponent
+    ParserComponent,
+    MinimalCoverComponent
   ],
   imports: [
     BrowserModule,

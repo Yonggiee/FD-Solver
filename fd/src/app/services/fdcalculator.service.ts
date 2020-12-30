@@ -40,7 +40,8 @@ export class FDCalculatorService {
       }
     }
     this.attributes = attributes;
-    this.createFDHashmap(this.attributes);
+    this.fdHashmap = this.createFDHashmap(this.fdArray);
+    this.attributeClosure = this.createAttributesClosureArray(this.fdHashmap);
     return this.fdArray;
   }
 
@@ -77,19 +78,17 @@ export class FDCalculatorService {
           if (!(key in attributeClosureTemp)) {
             attributeClosureTemp[key] = [];
           }
-          attributeClosureTemp[key].push(array[i]);
         }
       }
     }
     return attributeClosureTemp;
   }
 
+  // parse FDs to remove unnecessary attributes
   parseFDInAttributes(fdArray, fd) {
     let splitFDAtArrow = fd.split('->');
     let fromAttributes = Array.from(new Set(splitFDAtArrow[0].split('')));
     let afterAttributes = Array.from(new Set(splitFDAtArrow[1].split('')));
-    console.log(fromAttributes);
-    console.log(afterAttributes);
     afterAttributes = afterAttributes.filter( function( ele ) {
       return fromAttributes.indexOf( ele ) < 0;
     });
@@ -99,50 +98,52 @@ export class FDCalculatorService {
   }
 
   calculateAttributeClosure() {
-    this.populateAttributeClosure();
+    this.attributeClosure = this.populateAttributeClosure(this.fdHashmap, this.attributeClosure);
   }
 
   // create a hashmap which represents the FDs
-  createFDHashmap(attributes: string) {
-    for (let i = 0; i < this.fdArray.length; i++) {
-      let temp = this.fdArray[i];
-      let furtherSplit = this.fdArray[i].split('->');
-      if (!(furtherSplit[0] in this.fdHashmap)) {
-        this.fdHashmap[furtherSplit[0]] = furtherSplit[0].split('');
+  createFDHashmap(fdArray) {
+    let fdHashmap = {};
+    for (let i = 0; i < fdArray.length; i++) {
+      let temp = fdArray[i];
+      let furtherSplit = fdArray[i].split('->');
+      if (!(furtherSplit[0] in fdHashmap)) {
+        fdHashmap[furtherSplit[0]] = furtherSplit[0].split('');
       }
-      this.fdHashmap[furtherSplit[0]] = 
-        Array.from(new Set(this.fdHashmap[furtherSplit[0]].concat(furtherSplit[1].split('')))); 
+      fdHashmap[furtherSplit[0]] = 
+        Array.from(new Set(fdHashmap[furtherSplit[0]].concat(furtherSplit[1].split('')))); 
     }
-    this.attributeClosure = this.createAttributesClosureArray(this.fdHashmap);
+    return fdHashmap;
   }
 
   // fill the attributes of the attribute closure
-  populateAttributeClosure() {
-    for (let key in this.attributeClosure) {
+  populateAttributeClosure(fdHashmap, attributeClosure) {
+    for (let key in attributeClosure) {
       let checkedCombi = {};
-      this.attributeClosure[key] = key;
+      attributeClosure[key] = key;
       let prevLength = key.length;
       while(true) {
-        let combis = this.getCombis(this.attributeClosure[key]);
+        let combis = this.getCombis(attributeClosure[key]);
         for (let i = 0; i < combis.length; i++) {
           if (checkedCombi[combis[i]]) {
             continue;
           }
           let temp = 
-            Array.from(new Set(this.attributeClosure[key].split('').concat(this.fdHashmap[combis[i]])));
-          this.attributeClosure[key] = temp.join('');
+            Array.from(new Set(attributeClosure[key].split('').concat(fdHashmap[combis[i]])));
+          attributeClosure[key] = temp.join('');
           checkedCombi[combis[i]] = true;
         }
-        let newLength = this.attributeClosure[key].length;
+        let newLength = attributeClosure[key].length;
         if (newLength == prevLength) {
           break;
         }
         prevLength = newLength;
       }
     }
-    for (let key in this.attributeClosure) {
-      this.attributeClosure[key] = this.attributeClosure[key].split('').sort().join('');
+    for (let key in attributeClosure) {
+      attributeClosure[key] = attributeClosure[key].split('').sort().join('');
     }
+    return attributeClosure;
   }
 
   // get substring combinations of string
@@ -170,5 +171,56 @@ export class FDCalculatorService {
     });
   }
 
-  // Split 
+  // split FDs
+  splitFD() {
+    this.calculateAttributeClosure();
+    let splitFDArray = [];
+    for (let key in this.fdHashmap) {
+      let tempArray = this.fdHashmap[key];
+      for (let i = key.length; i < tempArray.length; i++) {
+        let newFD = key + '->' + tempArray[i];
+        splitFDArray.push(newFD);
+      }
+    }
+    return splitFDArray;
+  }
+
+  // remove unnecessary FDs
+  removeUnnecessaryFDs(fdArray) {
+    let newFDDict = {};
+    newFDDict['removeFDs'] = [];
+    newFDDict['keepFDs'] = [];
+    console.log(this.attributeClosure);
+    
+    let itr = 0;
+    while(itr < fdArray.length) {
+      let cloneArray = fdArray.slice();
+      cloneArray.splice(itr, 1);
+      let hashMapTemp = this.createFDHashmap(cloneArray);
+      let attributeClosureTemp = this.createAttributesClosureArray(hashMapTemp);
+      attributeClosureTemp = this.populateAttributeClosure(hashMapTemp, attributeClosureTemp);
+      if (this.isHashMapEqual(this.attributeClosure, attributeClosureTemp)) {
+        newFDDict['removeFDs'].push(fdArray[itr]);
+      } else {
+        newFDDict['keepFDs'].push(fdArray[itr]);
+      }
+      itr++;
+    }
+    return newFDDict;
+  }
+
+  isHashMapEqual(map1, map2) {
+    const keys1 = Object.keys(map1), keys2 = Object.keys(map2);
+    let match = true;
+    if (keys1.length !== keys2.length) {
+      return false;
+    }
+    for (let key of keys1) {
+      if (map1[key] !== map2[key]) {
+        match = false; 
+        break; 
+      }
+    }
+    return match;
+  }
 }

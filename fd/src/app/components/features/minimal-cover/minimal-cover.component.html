@@ -1,0 +1,21 @@
+<p>Minimal Cover</p>
+
+<button (click)="run()">Run</button>
+
+<p>Split FDs</p>
+
+<div *ngFor="let fd of splitFDs">
+    <p>{{fd}}</p>
+</div>
+
+<p>Keep FDs</p>
+
+<div *ngFor="let fd of keepFDs">
+    <p>{{fd}}</p>
+</div>
+
+<p>Unnecessary FDs</p>
+
+<div *ngFor="let fd of removeFDs">
+    <p>{{fd}}</p>
+</div>
