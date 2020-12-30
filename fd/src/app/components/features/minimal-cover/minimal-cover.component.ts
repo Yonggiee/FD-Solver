@@ -16,6 +16,7 @@ export class MinimalCoverComponent implements OnInit {
   }
 
   run() {
+    this.fdCalculator.calculateAttributeClosure();
     this.splitFDs = this.fdCalculator.splitFD();
     let newFDs = this.fdCalculator.removeUnnecessaryFDs(this.splitFDs);
     this.keepFDs = newFDs['keepFDs'];

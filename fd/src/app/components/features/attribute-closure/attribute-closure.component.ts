@@ -20,7 +20,6 @@ export class AttributeClosureComponent implements OnInit {
   }
   
   run() {
-    this.fdCalculator.calculateAttributeClosure();
     this.attributeClosure = this.fdCalculator.attributeClosure;
   }
 

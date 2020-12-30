@@ -42,6 +42,8 @@ export class FDCalculatorService {
     this.attributes = attributes;
     this.fdHashmap = this.createFDHashmap(this.fdArray);
     this.attributeClosure = this.createAttributesClosureArray(this.fdHashmap);
+    this.calculateAttributeClosure();
+    this.attributeClosure = this.removeUnnecessaryAttributeClosure(this.attributeClosure);
     return this.fdArray;
   }
 
@@ -87,13 +89,17 @@ export class FDCalculatorService {
   // parse FDs to remove unnecessary attributes
   parseFDInAttributes(fdArray, fd) {
     let splitFDAtArrow = fd.split('->');
-    let fromAttributes = Array.from(new Set(splitFDAtArrow[0].split('')));
-    let afterAttributes = Array.from(new Set(splitFDAtArrow[1].split('')));
+    let fromAttributes = Array.from(new Set(splitFDAtArrow[0].split('').sort()));
+    let afterAttributes = Array.from(new Set(splitFDAtArrow[1].split('').sort()));
     afterAttributes = afterAttributes.filter( function( ele ) {
       return fromAttributes.indexOf( ele ) < 0;
     });
-    let newFD = fromAttributes.join('') + '->' + afterAttributes.join('');
-    fdArray.push(newFD);
+    if (afterAttributes.length > 0) {
+      let newFD = fromAttributes.join('') + '->' + afterAttributes.join('');
+      if (fdArray.indexOf(newFD) < 0) {
+        fdArray.push(newFD);
+      }
+    }
     return fdArray;
   }
 
@@ -146,6 +152,30 @@ export class FDCalculatorService {
     return attributeClosure;
   }
 
+  // Remove unnecessary attribute combis in attribute combinations
+  removeUnnecessaryAttributeClosure(attributeClosure) {
+    const keys = Object.keys(attributeClosure);
+    for (let i = 0; i < keys.length; i++) {
+      let elementsOfKey1 = keys[i].split('');
+      let obj = {};
+      for (let j = i + 1; j < keys.length; j++) {
+        let elementsOfKey2 = keys[j].split('');
+        elementsOfKey2.forEach((ele, index) => {
+          obj[ele] = index;
+        });
+        let checkKey1InKey2 = elementsOfKey1.every((el) => {
+          return obj[el] !== undefined;
+        });
+        if (checkKey1InKey2) {
+          if (attributeClosure[keys[i]] == attributeClosure[keys[j]]) {
+            delete attributeClosure[keys[j]];
+          }
+        }
+      }
+    }
+    return attributeClosure;
+  }
+
   // get substring combinations of string
   getCombis(input) {
     var array1 = [];
@@ -173,13 +203,15 @@ export class FDCalculatorService {
 
   // split FDs
   splitFD() {
-    this.calculateAttributeClosure();
     let splitFDArray = [];
-    for (let key in this.fdHashmap) {
-      let tempArray = this.fdHashmap[key];
-      for (let i = key.length; i < tempArray.length; i++) {
-        let newFD = key + '->' + tempArray[i];
-        splitFDArray.push(newFD);
+    for (let key in this.attributeClosure) {
+      let keyAttributes = key.split('');
+      let tempArray = this.attributeClosure[key].split('');
+      for (let i = 0; i < tempArray.length; i++) {
+        if (keyAttributes.indexOf(tempArray[i]) < 0) {
+          let newFD = key + '->' + tempArray[i];
+          splitFDArray.push(newFD);
+        }
       }
     }
     return splitFDArray;
@@ -190,7 +222,6 @@ export class FDCalculatorService {
     let newFDDict = {};
     newFDDict['removeFDs'] = [];
     newFDDict['keepFDs'] = [];
-    console.log(this.attributeClosure);
     
     let itr = 0;
     while(itr < fdArray.length) {
