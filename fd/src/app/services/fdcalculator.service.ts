@@ -72,13 +72,16 @@ export class FDCalculatorService {
 
   createAttributesClosureArray(hashmap) {
     let attributeClosureTemp = {};
-    for (let key in hashmap) {
-      let array = hashmap[key];
-      let attributesInKey = key.split('');
-      for (let i = 0; i < array.length; i++) {
-        if (!(attributesInKey.includes(array[i]))) {
-          if (!(key in attributeClosureTemp)) {
-            attributeClosureTemp[key] = [];
+    let sortedKeys = Object.keys(hashmap).sort(function(a, b) {
+      return a.length - b.length || a.localeCompare(b)
+    });
+    for (let i = 0; i < sortedKeys.length; i++) {
+      let array = hashmap[sortedKeys[i]];
+      let attributesInKey = sortedKeys[i].split('');
+      for (let j = 0; j < array.length; j++) {
+        if (!(attributesInKey.includes(array[j]))) {
+          if (!(sortedKeys[i] in attributeClosureTemp)) {
+            attributeClosureTemp[sortedKeys[i]] = [];
           }
         }
       }
@@ -169,6 +172,16 @@ export class FDCalculatorService {
         if (checkKey1InKey2) {
           if (attributeClosure[keys[i]] == attributeClosure[keys[j]]) {
             delete attributeClosure[keys[j]];
+          } else {
+            let arrayInKey2NotInKey1 = elementsOfKey2.filter( function( ele ) {
+              return elementsOfKey1.indexOf( ele ) < 0;
+            });
+            let arrayInAttribute2NotInAttribute1 = attributeClosure[keys[j]].split('').filter( function( ele ) {
+              return attributeClosure[keys[i]].split('').indexOf( ele ) < 0;
+            });
+            if (arrayInKey2NotInKey1.join('') == arrayInAttribute2NotInAttribute1.join('')){
+              delete attributeClosure[keys[j]];
+            }
           }
         }
       }
@@ -204,6 +217,7 @@ export class FDCalculatorService {
   // split FDs
   splitFD() {
     let splitFDArray = [];
+
     for (let key in this.attributeClosure) {
       let keyAttributes = key.split('');
       let tempArray = this.attributeClosure[key].split('');
@@ -227,6 +241,9 @@ export class FDCalculatorService {
     while(itr < fdArray.length) {
       let cloneArray = fdArray.slice();
       cloneArray.splice(itr, 1);
+      cloneArray = cloneArray.filter(function( ele ) {
+        return newFDDict['removeFDs'].indexOf( ele ) < 0;
+      });
       let hashMapTemp = this.createFDHashmap(cloneArray);
       let attributeClosureTemp = this.createAttributesClosureArray(hashMapTemp);
       attributeClosureTemp = this.populateAttributeClosure(hashMapTemp, attributeClosureTemp);
