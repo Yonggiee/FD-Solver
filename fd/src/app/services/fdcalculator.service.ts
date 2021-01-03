@@ -158,10 +158,19 @@ export class FDCalculatorService {
   // Remove unnecessary attribute combis in attribute combinations
   removeUnnecessaryAttributeClosure(attributeClosure) {
     const keys = Object.keys(attributeClosure);
-    for (let i = 0; i < keys.length; i++) {
+    let deletedKeys = {};
+    console.log(attributeClosure);
+    for (let i = 0; i < keys.length - 1; i++) {
       let elementsOfKey1 = keys[i].split('');
       let obj = {};
+      console.log(keys[i]);
+      if (deletedKeys[keys[i]]) {
+        continue;
+      }
       for (let j = i + 1; j < keys.length; j++) {
+        if (deletedKeys[keys[j]]) {
+          continue;
+        }
         let elementsOfKey2 = keys[j].split('');
         elementsOfKey2.forEach((ele, index) => {
           obj[ele] = index;
@@ -171,6 +180,7 @@ export class FDCalculatorService {
         });
         if (checkKey1InKey2) {
           if (attributeClosure[keys[i]] == attributeClosure[keys[j]]) {
+            deletedKeys[keys[j]] = true;
             delete attributeClosure[keys[j]];
           } else {
             let arrayInKey2NotInKey1 = elementsOfKey2.filter( function( ele ) {
@@ -180,6 +190,7 @@ export class FDCalculatorService {
               return attributeClosure[keys[i]].split('').indexOf( ele ) < 0;
             });
             if (arrayInKey2NotInKey1.join('') == arrayInAttribute2NotInAttribute1.join('')){
+              deletedKeys[keys[j]] = true;
               delete attributeClosure[keys[j]];
             }
           }
