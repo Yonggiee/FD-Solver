@@ -36,7 +36,7 @@ export class FDCalculatorService {
       } else {
         let furtherSplit = tempArray[i].split('->');
         this.checkFDInAttributes(furtherSplit);
-        this.parseFDInAttributes(this.fdArray, temp);
+        this.fdArray = this.parseFDInAttributes(this.fdArray, temp);
       }
     }
     this.attributes = attributes;
@@ -281,5 +281,27 @@ export class FDCalculatorService {
       }
     }
     return match;
+  }
+
+  // equivalence checker
+  checkEquivalence(fdInput) {
+    let tempArray = fdInput.split(',');
+    let fdArray = [];
+    for (let i = 0; i < tempArray.length; i++) {
+      let temp = tempArray[i];
+      if (!(/^[A-Za-z]+->[A-Za-z]+$/.test(temp))) {
+        tempArray = [];
+        throw new Error("'" + temp + "' is not valid!");
+      } else {
+        let furtherSplit = tempArray[i].split('->');
+        this.checkFDInAttributes(furtherSplit);
+        fdArray = this.parseFDInAttributes(fdArray, temp);
+      }
+    }
+    let fdHashMap = this.createFDHashmap(fdArray);
+    let attributeClosure = this.createAttributesClosureArray(fdHashMap);
+    attributeClosure = this.populateAttributeClosure(fdHashMap, attributeClosure);
+    attributeClosure = this.removeUnnecessaryAttributeClosure(attributeClosure);
+    return this.isHashMapEqual(attributeClosure, this.attributeClosure) ? "True" : "False";
   }
 }

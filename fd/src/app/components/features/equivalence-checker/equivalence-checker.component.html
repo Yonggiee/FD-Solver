@@ -1,0 +1,18 @@
+<p>Equivalence Checker</p>
+
+<form [formGroup]="equiForm" (ngSubmit)="onSubmit()">
+    <div class="text-bar">
+        <p><label>Input Functional Dependencies:</label></p>
+        <p> <input type="text" formControlName="fdInput" (keydown.space)="$event.preventDefault()"></p>
+    </div>
+
+    <button class="button-search" type="submit" [disabled] = "!equiForm.valid">Check</button>
+</form>
+
+<div *ngIf="result != ''">
+    <p>{{result}}</p>
+</div>
+
+<div *ngIf="errMsg != ''">
+    <p>{{errMsg}}</p>
+</div>
